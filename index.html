@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Chosen Palette: Dark Mode (BG: slate-950, Surface: slate-900, Text: slate-200, Accent: indigo-500) -->
+    <!-- Feature Set: 
+         - 500+ Technologies Data Integration
+         - Dynamic Tab & Accordion Generation
+         - AI Explanation Modal (Single Column)
+         - "Highlight-to-Define" Tooltip
+         - Static Search Panel
+         - Real-time Charts
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-Harvest Technology Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        /* --- Base Layout & Typography --- */
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* --- Chart Containers --- */
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin: 0 auto; height: 350px; }
+        .donut-chart-container { position: relative; width: 100%; max-width: 300px; margin: 0 auto; height: 300px; }
+        @media (max-width: 640px) { .chart-container { height: 250px; } .donut-chart-container { height: 220px; } }
+
+        /* --- Components --- */
+        .tab-btn {
+            padding: 0.5rem 1rem; margin: 0 0.5rem 0.5rem 0; border-radius: 0.375rem; font-weight: 500; font-size: 0.875rem;
+            background-color: #1e293b; color: #94a3b8; border: 1px solid #334155; transition: all 0.2s;
+        }
+        .tab-btn:hover { background-color: #334155; color: #f1f5f9; }
+        .tab-btn.active-tab { background-color: #6366f1; color: white; border-color: #6366f1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+
+        .accordion-header {
+            padding: 1rem; background-color: #1e293b; border: 1px solid #334155; border-radius: 0.375rem;
+            display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: #e2e8f0; cursor: pointer; transition: background 0.2s;
+        }
+        .accordion-header:hover { background-color: #334155; }
+        .accordion-content {
+            padding: 1rem; border: 1px solid #334155; border-top: 0; border-bottom-left-radius: 0.375rem; border-bottom-right-radius: 0.375rem;
+            background-color: #0f172a; color: #cbd5e1; display: none;
+        }
+        .accordion-content.show { display: block; }
+        .accordion-icon { transition: transform 0.2s; }
+        .accordion-header.open .accordion-icon { transform: rotate(180deg); }
+
+        /* --- Interactive Items --- */
+        .concept-item {
+            padding: 0.375rem 0.75rem; border-radius: 0.25rem; cursor: pointer; display: flex; align-items: center; transition: all 0.15s;
+            border-bottom: 1px solid #1e293b; font-size: 0.925rem;
+        }
+        .concept-item:hover { background-color: #334155; color: #818cf8; padding-left: 1rem; }
+        .info-icon { font-size: 0.75em; margin-right: 0.5rem; opacity: 0.5; }
+
+        /* --- AI Modal Content --- */
+        .ai-content h4 { color: #a5b4fc; font-size: 1.15rem; font-weight: 700; margin: 1.5rem 0 0.75rem; border-bottom: 1px solid #334155; padding-bottom: 0.25rem; }
+        .ai-content p { margin-bottom: 1rem; line-height: 1.7; color: #e2e8f0; }
+        .ai-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; color: #cbd5e1; }
+        .ai-content li { margin-bottom: 0.4rem; }
+        .ai-content strong { color: #2dd4bf; font-weight: 700; } /* Teal Highlight */
+
+        /* --- Utilities --- */
+        .spinner { border: 3px solid rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 50%; border-left-color: #818cf8; animation: spin 1s linear infinite; margin: 0 auto; }
+        .spinner-small { border: 2px solid rgba(255,255,255,0.1); width: 14px; height: 14px; border-radius: 50%; border-left-color: #2dd4bf; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        ::selection { background-color: #4f46e5; color: white; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans leading-relaxed selection:bg-indigo-500 selection:text-white">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-2">Post-Harvest Technology Explorer</h1>
+            <p class="text-slate-400">A comprehensive guide to 500+ technologies across the agricultural value chain.</p>
+        </header>
+
+        <!-- Navigation Tabs (Generated via JS) -->
+        <nav id="tabs-container" class="flex flex-wrap justify-center mb-8" role="tablist"></nav>
+
+        <main id="content-area">
+            <!-- Overview Section -->
+            <section id="content-overview" class="tab-content">
+                <div class="bg-slate-900 p-6 rounded-lg shadow-lg border border-slate-800 mb-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-indigo-300 mb-2">Framework Overview</h2>
+                            <p class="text-slate-400 text-sm">Explore the 10 sections of post-harvest technology.</p>
+                        </div>
+                        <div class="mt-4 md:mt-0 bg-indigo-950/50 border border-indigo-500/30 px-4 py-2 rounded text-sm">
+                            <span class="text-indigo-200">AI Power:</span> 
+                            <span class="text-slate-400">Click items for details. <strong class="text-teal-400">Highlight text</strong> for definitions.</span>
+                        </div>
+                    </div>
+
+                    <!-- Search Container -->
+                    <div class="mb-8 relative z-10">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input type="text" id="search-input" placeholder="Search 500+ technologies (e.g., 'Spectroscopy', 'Blockchain', 'DCA')..." class="w-full pl-10 p-3 bg-slate-800 border border-slate-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-100 placeholder-slate-500 transition-all">
+                            <button id="clear-search" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-white hidden">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Static Search Results Panel -->
+                        <div id="search-results-container" class="hidden mt-2 w-full bg-slate-900 rounded-lg border border-slate-700 shadow-2xl overflow-hidden">
+                            <div class="bg-slate-950 px-4 py-2 border-b border-slate-800 flex justify-between items-center">
+                                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Matching Technologies</h3>
+                                <span id="result-count" class="text-xs text-slate-500"></span>
+                            </div>
+                            <ul id="search-results-list" class="max-h-96 overflow-y-auto divide-y divide-slate-800"></ul>
+                            <p id="search-no-results" class="text-slate-500 hidden text-center py-8 italic">No matching technologies found.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-center text-slate-300 mb-4">Distribution of Technologies by Section</h3>
+                    <div class="chart-container">
+                        <canvas id="mainBarChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dynamic Section Containers will be injected here -->
+            <div id="dynamic-sections"></div>
+        </main>
+    </div>
+
+    <!-- AI Modal -->
+    <div id="ai-modal" class="fixed inset-0 bg-slate-950/90 hidden items-center justify-center z-50 p-4 backdrop-blur-md">
+        <div class="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[85vh] text-slate-100 relative">
+            <div class="border-b border-slate-700 px-6 py-4 flex justify-between items-center bg-slate-950 rounded-t-xl flex-shrink-0">
+                <h3 id="modal-title" class="text-xl font-bold text-indigo-300 pr-4">Concept Title</h3>
+                <button id="close-modal" class="text-slate-400 hover:text-white focus:outline-none text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow" id="modal-scroll-area">
+                <div id="modal-loading" class="hidden flex-col items-center justify-center py-12">
+                    <div class="spinner"></div>
+                    <p class="text-indigo-300 mt-4 animate-pulse text-sm tracking-wide">CONSULTING GEMINI AI...</p>
+                </div>
+                <div id="modal-content" class="ai-content text-slate-300"></div>
+                <div id="modal-error" class="hidden bg-red-950/30 border border-red-900/50 text-red-300 p-4 rounded-lg text-center mt-4">
+                    <p class="font-semibold">Connection Error</p>
+                    <p class="text-sm opacity-80 mt-1">Please check your API Key configuration.</p>
+                </div>
+            </div>
+            <div class="bg-slate-950 border-t border-slate-700 px-6 py-3 rounded-b-xl flex justify-end flex-shrink-0">
+                <button id="close-modal-btn" class="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-500 transition shadow-lg shadow-indigo-900/20">Close</button>
+            </div>
+            
+            <!-- Definition Tooltip (Absolute within modal context) -->
+            <div id="definition-tooltip" class="fixed z-[60] hidden bg-slate-800 text-slate-200 text-sm p-3 rounded shadow-xl max-w-xs border border-teal-500/30 shadow-teal-900/10 pointer-events-none transform -translate-y-full mt-[-10px]"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const apiKey = "AIzaSyDX6JMUxdp0XMKYcYZUEJzI3Ei7GKwrrGM"; // <--- INSERT GEMINI API KEY HERE
+
+            // --- 1. Data Structure (Full 500+ Items) ---
+            const technologyData = {
+                "Section 1": {
+                    title: "Post-Harvest Storage Technologies",
+                    color: "#6366f1", // Indigo
+                    categories: {
+                        "Storage Technologies": ["Controlled Atmosphere (CA) Storage", "Dynamic Controlled Atmosphere (DCA) Storage", "Temperature Control Systems", "Humidity Management", "Oxygen Level Manipulation", "Carbon Dioxide Concentration Control", "Respiration Rate Management", "Ultra-Low Oxygen (ULO) Storage", "Ethylene Control", "Cold Storage Infrastructure", "Insulated Storage Chambers", "Refrigeration Systems", "1-Methylcyclopropane (1-MCP) Treatment", "Ripening Inhibition", "Ethylene Perception Blocking"],
+                        "Storage Monitoring & Control": ["Fruit Respiration Management", "Post-Harvest Physiology", "Chlorophyll Fluorescence (CF) Sensors", "Respiration Quotient (RQ) Sensors", "Ethanol (ET) Sensors", "Real-Time Atmosphere Adjustment", "Low Oxygen Stress Monitoring", "Physiological Disorder Prevention", "Smart Storage Algorithms", "Adaptive Climate Control", "Digital Twin Technology", "Predictive Storage Management", "Energy Optimization Algorithms", "Automated Environmental Control", "Multi-Zone Climate Management"],
+                        "Advanced Storage Features": ["Heat Mapping", "Airflow Optimization", "Pre-Cooling Processes", "Forced-Air Cooling", "Hydrocooling", "Vacuum Cooling", "Cryogenic Cooling", "Phase Change Materials (PCM)", "Magnetic Refrigeration", "Thermoelectric Cooling", "Absorption Refrigeration", "Multi-Temperature Zones", "Blast Freezing", "Pressure Relief Valves", "Gas-Tight Construction"],
+                        "Chemical & Biological Treatments": ["DPA (Diphenylamine) Treatment", "Fungicide Application", "Growth Regulators (NAA, AVG)", "Antimicrobial Treatments", "Oxygen Scrubbers", "CO₂ Scrubbers", "Nitrogen Generators (PSA Technology)", "Potassium Permanganate Scrubbers", "Catalytic Converters (Ethylene)", "Ozone Treatment", "UV-C Treatment", "Activated Carbon Filters", "Hydrated Lime Systems", "Edible Coatings", "Antioxidant Treatments", "Calcium Chloride Treatments", "Post-Harvest Dip Treatments"]
+                    }
+                },
+                "Section 2": {
+                    title: "Quality Control & Inspection Systems",
+                    color: "#10b981", // Emerald
+                    categories: {
+                        "Optical Sorting Technologies": ["Optical Sorting", "Machine Vision Systems", "Color Detection (CCD Cameras)", "Size Grading Systems", "Shape Recognition", "Surface Inspection", "Defect Detection", "Near-Infrared (NIR) Spectroscopy", "Hyperspectral Imaging", "Multispectral Imaging", "Computer Vision with AI", "Convolutional Neural Networks (CNN)", "Deep Learning-Based Vision Systems", "Transfer Learning Models", "Object Detection Algorithms (YOLO, R-CNN)", "Semantic Segmentation", "3D Imaging Systems", "360-Degree Inspection", "High-Resolution RGB Sensors", "Global Shutter Technology", "Real-Time Image Processing", "Automated Grading Lines", "Monolayer Feed Systems", "Image Processing Software", "Sorting Mechanisms", "Product Separation Systems"],
+                        "Advanced Sensing Technologies": ["X-Ray Inspection", "Thermal Imaging", "Fluorescence Imaging", "Raman Spectroscopy", "Terahertz Imaging", "Sugar Content Detection (Brix)", "Acidity Level Detection", "Internal Browning Detection", "Rot Detection (Internal)", "Bruise Detection (Internal)", "Firmness Measurement (Acoustic)", "Density Analysis", "Water Content Analysis", "Protein/Fat Content Analysis", "Maturity Index Measurement", "Sunburn Detection", "Skin Blemish Detection", "Chlorophyll Loss Detection", "Surface Texture Analysis", "Gloss Measurement", "Stem/Calyx Detection", "Uniformity Assessment", "Active Packaging", "Modified Atmosphere Packaging (MAP)", "Vacuum Packaging", "Smart Packaging", "Temperature-Indicating Labels", "Time-Temperature Indicators (TTI)", "Oxygen Scavengers", "Moisture Absorbers", "Antimicrobial Packaging", "LED Light Sources"],
+                        "Mechanical Systems": ["Conveyor Belt Systems", "Automated Packing Lines", "Weighing Systems", "Singulator Systems", "Orientation Control Systems", "Variable Speed Drives", "Rotating Cup Systems", "Vibrating Conveyors", "Air Jet Ejectors", "Mechanical Paddles/Gates", "Belt Diverters", "Pneumatic Cylinders", "Servo Motors", "Industrial PCs", "GPU Acceleration", "SCADA Systems", "Programmable Logic Controllers (PLC)", "Human-Machine Interface (HMI)", "Statistical Process Control (SPC)", "Six Sigma Methodologies", "Total Quality Management (TQM)", "HACCP Systems", "ISO Certifications", "Food Safety Standards", "Good Agricultural Practices (GAP)", "Good Manufacturing Practices (GMP)", "Quality Management Systems (QMS)", "Electronic Batch Records", "Document Control Systems", "Compliance Tracking"]
+                    }
+                },
+                "Section 3": {
+                    title: "Cold Chain & Logistics Technologies",
+                    color: "#0ea5e9", // Sky
+                    categories: {
+                        "Transportation & Logistics": ["Refrigerated Transportation", "Cold Chain Logistics", "Temperature-Controlled Vehicles", "GPS Tracking", "Multi-Modal Logistics", "Route Optimization Algorithms", "Fleet Management Systems", "Transportation Management Systems (TMS)", "Order Management Systems (OMS)", "Distribution Network Management", "Wholesale Distribution Systems", "Retail Distribution Systems", "Last-Mile Delivery", "Refrigerated Containers", "Insulated Packaging", "Gel Packs/Ice Packs", "Dry Ice Systems", "Liquid Nitrogen Transport", "Temperature Recorders", "Data Loggers", "Wireless Temperature Monitoring", "Vehicle Telematics", "Real-Time Location Systems (RTLS)", "Geofencing Technology", "Delivery Time Optimization"],
+                        "Cold Chain Monitoring": ["Temperature Sensors", "Humidity Sensors", "Wireless Sensor Networks (WSN)", "LoRaWAN (Long Range WAN)", "RFID (Radio-Frequency Identification)", "Active RFID Tags", "Passive RFID Tags", "NFC (Near Field Communication)", "QR Code Systems", "Barcode Systems", "Asset Tracking", "GPS + Temperature Trackers", "Real-Time Dashboards", "Alert Management Systems", "Cloud Computing", "Remote Monitoring Platforms", "Mobile Applications", "Web-Based Portals", "Push Notification Systems", "SMS Alerts", "Email Alerts", "Automated Reporting", "Compliance Documentation", "Audit Trail Systems", "Cold Chain Validation"]
+                    }
+                },
+                "Section 4": {
+                    title: "IoT & Sensor Ecosystems",
+                    color: "#8b5cf6", // Violet
+                    categories: {
+                        "IoT Infrastructure": ["Internet of Things (IoT) Architecture", "Gas Concentration Sensors (O₂, CO₂, Ethylene)", "Light Sensors", "Pressure Sensors", "Vibration Sensors", "Door Open/Close Sensors", "Motion Sensors", "Energy Consumption Sensors", "Wi-Fi Connectivity", "Cellular/4G/5G Networks", "GPRS Communication", "Bluetooth Low Energy (BLE)", "Zigbee Protocol", "NB-IoT (Narrowband IoT)", "MQTT Protocol", "Edge Computing", "Fog Computing", "Data Aggregation Platforms", "Time-Series Databases", "Cloud-Based Monitoring", "Edge Analytics", "Real-Time Data Processing", "Sensor Fusion", "Multi-Sensor Integration", "Sensor Calibration Systems"],
+                        "Precision Agriculture IoT": ["Soil Moisture Sensors", "Soil pH Sensors", "Soil Nutrient Sensors", "Weather Stations", "Rain Gauges", "Leaf Wetness Sensors", "Canopy Temperature Sensors", "PAR (Photosynthetically Active Radiation) Sensors", "Drone Imagery", "UAV (Unmanned Aerial Vehicle) Technology", "Satellite Imagery", "NDVI (Normalized Difference Vegetation Index)", "Multispectral Drone Cameras", "Thermal Drone Cameras", "LiDAR (Light Detection and Ranging)", "Aerial Mapping", "Variable Rate Technology (VRT)", "Precision Irrigation", "Drip Irrigation Systems", "Fertigation Systems", "GPS-Guided Equipment", "Site-Specific Crop Management", "Prescription Mapping", "IoT-Based Farm Monitoring", "Wireless Agricultural Sensors"]
+                    }
+                },
+                "Section 5": {
+                    title: "Artificial Intelligence & Machine Learning",
+                    color: "#d946ef", // Fuchsia
+                    categories: {
+                        "Predictive Analytics": ["Demand Forecasting Models", "Price Prediction Algorithms", "Yield Prediction Models", "Shelf-Life Prediction", "Quality Degradation Modeling", "Spoilage Prediction", "Market Trend Analysis", "Consumer Behavior Analysis", "Long Short-Term Memory (LSTM) Networks", "Gradient Boosting Machines", "Random Forest Algorithms", "Support Vector Machines (SVM)", "K-Nearest Neighbors (KNN)", "Decision Trees", "Neural Networks", "Reinforcement Learning", "Ensemble Methods", "Time Series Analysis", "Regression Analysis", "Correlation Analysis", "Cluster Analysis", "Principal Component Analysis (PCA)", "A/B Testing", "Monte Carlo Simulation", "Scenario Planning"],
+                        "AI & Computer Vision": ["Image Classification", "Object Detection", "Instance Segmentation", "Anomaly Detection", "Pattern Recognition", "Feature Extraction", "Image Enhancement", "Data Augmentation", "Generative AI", "Natural Language Processing (NLP)", "Sentiment Analysis", "Conversational AI", "AI-Powered Advisory Systems", "Automated Decision Making", "Cognitive Computing", "Neural Architecture Search", "Federated Learning", "AutoML (Automated Machine Learning)", "Inventory Optimization", "Resource Allocation Algorithms", "Supply Chain Optimization", "Energy Optimization", "Warehouse Space Optimization", "Harvest Timing Optimization", "Pricing Optimization", "Predictive Maintenance", "Equipment Failure Prediction", "Disease Prediction Models", "Pest Prediction Models", "Climate Modeling", "Crop Modeling", "Yield Mapping", "Soil Mapping", "AI-Powered Robotics", "Vision-Guided Robotics"]
+                    }
+                },
+                "Section 6": {
+                    title: "Blockchain & Traceability Systems",
+                    color: "#f59e0b", // Amber
+                    categories: {
+                        "Blockchain Technologies": ["Distributed Ledger Technology (DLT)", "Immutable Records", "Smart Contracts", "Consensus Mechanisms", "Cryptographic Hashing", "Public/Private Key Encryption", "Permissioned Blockchain", "Permissionless Blockchain", "Hyperledger Fabric", "Ethereum Platform", "Block Creation & Validation", "Farm-to-Fork Traceability", "Provenance Tracking", "Chain of Custody", "Timestamp Verification", "Transaction History", "Product Authentication", "Anti-Counterfeiting", "Quality Certification", "Compliance Documentation", "Recall Management", "IoT-Blockchain Integration", "RFID-Blockchain Integration", "ERP-Blockchain Integration", "API-Based Integration"],
+                        "Data Management": ["Off-Chain Data Storage", "On-Chain Data Storage", "Big Data Analytics", "Real-Time Analytics", "Prescriptive Analytics", "Descriptive Analytics", "Diagnostic Analytics", "Data Visualization", "Business Intelligence Dashboards", "KPI Tracking Systems", "Apache Hadoop", "Apache Spark", "Data Warehousing", "Data Lakes", "ETL (Extract, Transform, Load) Processes"]
+                    }
+                },
+                "Section 7": {
+                    title: "Automation & Robotics",
+                    color: "#f43f5e", // Rose
+                    categories: {
+                        "Warehouse Automation": ["Automated Guided Vehicles (AGVs)", "Autonomous Mobile Robots (AMRs)", "Robotic Palletizing", "Robotic Picking Systems", "Robotic Packaging", "Conveyor Automation", "Automated Storage & Retrieval Systems (AS/RS)", "Vertical Lift Modules (VLM)", "Automated Forklifts", "Warehouse Management Systems (WMS)", "Warehouse Control Systems (WCS)", "Collaborative Robots (Cobots)", "Soft Robotics", "Swarm Robotics", "Harvesting Robots", "Pruning Robots", "Spraying Drones", "Weeding Robots", "Autonomous Tractors", "Material Handling Robots", "Sortation Systems", "Cross-Docking Automation", "Pick-to-Light Systems", "Voice-Directed Picking", "Augmented Reality (AR) for Picking"],
+                        "Control & Integration": ["Industrial Control Systems", "Motion Control", "Servo Control Systems", "Pneumatic Control", "Hydraulic Control", "Vision Systems Integration", "Force/Torque Sensors", "Collision Detection", "Safety Systems (Light Curtains, E-stops)", "Robot Programming Languages", "Machine Learning for Robotics", "Adaptive Control Systems", "Remote Operation Systems", "Digital Twin for Robotics", "Simulation Software"]
+                    }
+                },
+                "Section 8": {
+                    title: "Digital Platforms & Farmer Engagement",
+                    color: "#84cc16", // Lime
+                    categories: {
+                        "Mobile & Web Technologies": ["Farmer Mobile Apps", "Field Data Collection Apps", "Mobile Payment Systems", "Digital Mandi Platform", "Price Discovery Mechanisms", "Online Trading Platform", "Farmer-Buyer Connectivity", "Digital Marketplace", "E-Commerce Platforms", "Online Ordering Systems", "Customer Portals", "Supplier Portals", "Farmer Portals", "API Gateways", "Microservices Architecture", "Cloud-Native Applications", "Progressive Web Apps (PWA)", "Native Mobile Apps", "Cross-Platform Development", "Offline-First Architecture"],
+                        "Communication & Support": ["WhatsApp Business Integration", "Voice Broadcasting", "Video Conferencing", "Chatbots", "AI-Powered Customer Service", "Multilingual Support", "Crop Advisory Services", "Soil Testing Services", "Training & Education Platforms", "Knowledge Management Systems"]
+                    }
+                },
+                "Section 9": {
+                    title: "Sustainability & Energy Management",
+                    color: "#14b8a6", // Teal
+                    categories: {
+                        "Energy Systems": ["Energy Management Systems (EMS)", "Smart Grid Integration", "Demand Response Systems", "Load Balancing", "Peak Shaving", "Energy Storage Systems", "Battery Backup Systems", "Solar Power Integration", "Renewable Energy Systems", "Variable Frequency Drives (VFD)", "LED Lighting Systems", "Insulation Optimization", "Heat Recovery Systems", "Evaporative Cooling", "Natural Ventilation Systems"],
+                        "Environmental Management": ["Carbon Footprint Tracking", "Life Cycle Assessment (LCA)", "Water Usage Monitoring", "Waste Management Systems", "Circular Economy Principles", "Composting Systems", "Biogas Generation", "Zero Waste Initiatives", "Stream Processing", "Batch Processing", "Data Mining", "Geographic Information Systems (GIS)"]
+                    }
+                },
+                "Section 10": {
+                    title: "Emerging & Specialized Technologies",
+                    color: "#ec4899", // Pink
+                    categories: {
+                        "Extended Reality": ["Augmented Reality (AR) for Training", "Virtual Reality (VR) for Design", "Mixed Reality (MR)", "AR-Guided Maintenance", "Virtual Farm Tours"],
+                        "Advanced Materials & Biotechnology": ["Nanosensors", "Nanomaterial Coatings", "Nano-Encapsulation", "Smart Nanomaterials", "Aerogel Insulation", "Self-Healing Materials", "Smart Materials", "Biomimetic Materials", "Genetic Modification Tracking", "DNA Barcoding", "Biosensors", "Enzyme-Based Sensors", "Microbial Sensors", "Microbiological Testing", "Pesticide Residue Testing"],
+                        "Quantum & Advanced Computing": ["Quantum Computing", "Quantum Cryptography", "Quantum Sensors", "5G Networks", "Ultra-Low Latency Communication", "Massive IoT Connectivity", "Network Slicing", "Mobile Edge Computing (MEC)"],
+                        "Cybersecurity": ["Encryption (at rest & in transit)", "Two-Factor Authentication (2FA)", "Multi-Factor Authentication (MFA)", "Role-Based Access Control (RBAC)", "Identity & Access Management (IAM)", "Intrusion Detection Systems (IDS)", "Intrusion Prevention Systems (IPS)", "Firewall Systems", "VPN (Virtual Private Network)", "Security Information & Event Management (SIEM)", "Data Encryption", "Data Masking", "Data Anonymization", "Backup & Recovery Systems", "Disaster Recovery Planning"],
+                        "Integration & Standards": ["Enterprise Resource Planning (ERP)", "Supply Chain Management (SCM) Systems", "Customer Relationship Management (CRM)", "Farm Management Information Systems (FMIS)", "Laboratory Information Management Systems (LIMS)", "EDI (Electronic Data Interchange)", "XML/JSON Data Formats", "RESTful APIs", "GraphQL", "OData Protocol", "CoAP (Constrained Application Protocol)", "Message Queuing", "Enterprise Service Bus (ESB)", "API Management Platforms", "Integration Platform as a Service (iPaaS)", "Event-Driven Architecture", "Publish-Subscribe Pattern", "Business Continuity Planning", "GDPR Compliance", "Data Localization"]
+                    }
+                }
+            };
+
+            // Flatten data for search functionality
+            let allSearchItems = [];
+            Object.entries(technologyData).forEach(([secKey, section]) => {
+                Object.entries(section.categories).forEach(([catKey, items]) => {
+                    items.forEach(item => {
+                        allSearchItems.push({ name: item, section: secKey, category: catKey, title: section.title });
+                    });
+                });
+            });
+
+            // --- 2. UI Initialization ---
+            const tabsContainer = document.getElementById('tabs-container');
+            const dynamicSections = document.getElementById('dynamic-sections');
+            const overviewTabId = 'btn-overview';
+            const overviewContentId = 'content-overview';
+
+            function initUI() {
+                // 2.1 Build Tabs
+                let tabHTML = `<button id="${overviewTabId}" class="tab-btn active-tab" role="tab" aria-selected="true" aria-controls="${overviewContentId}">Overview</button>`;
+                Object.keys(technologyData).forEach((key, index) => {
+                    // Extract a short name for the tab (e.g., "Section 1" -> "S1") or use a shorter custom label
+                    const shortName = key.replace("Section ", "S").replace(" (Bonus)", "");
+                    tabHTML += `<button id="btn-${key.replace(/\s/g, '')}" class="tab-btn" role="tab" aria-selected="false" aria-controls="content-${key.replace(/\s/g, '')}">${shortName}</button>`;
+                });
+                tabsContainer.innerHTML = tabHTML;
+
+                // 2.2 Build Content Sections
+                let sectionsHTML = '';
+                Object.entries(technologyData).forEach(([key, data]) => {
+                    const sectionId = `content-${key.replace(/\s/g, '')}`;
+                    const chartId = `chart-${key.replace(/\s/g, '')}`;
+                    
+                    // Generate Accordions for each category
+                    let accordionsHTML = '';
+                    Object.entries(data.categories).forEach(([catName, items], idx) => {
+                        const listItems = items.map(item => 
+                            `<li class="concept-item"><span class="info-icon">🔍</span>${item}</li>`
+                        ).join('');
+                        
+                        accordionsHTML += `
+                            <div class="accordion-container mb-4">
+                                <div class="accordion-header" data-target="acc-${sectionId}-${idx}">
+                                    <span>${catName} <span class="text-xs font-normal text-slate-500 ml-2">(${items.length})</span></span>
+                                    <i class="accordion-icon text-slate-500">▼</i>
+                                </div>
+                                <div id="acc-${sectionId}-${idx}" class="accordion-content">
+                                    <ul class="list-none space-y-1">${listItems}</ul>
+                                </div>
+                            </div>`;
+                    });
+
+                    sectionsHTML += `
+                        <section id="${sectionId}" class="tab-content hidden">
+                            <div class="bg-slate-900 p-6 rounded-lg shadow-lg border border-slate-800">
+                                <h2 class="text-2xl font-semibold mb-2" style="color: ${data.color}">${key}: ${data.title}</h2>
+                                <p class="text-slate-400 mb-6">Explore the ${Object.values(data.categories).flat().length} technologies within this domain.</p>
+                                
+                                <div class="grid lg:grid-cols-3 gap-8 items-start">
+                                    <div class="lg:col-span-1 bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col items-center justify-center">
+                                        <h3 class="text-sm font-semibold text-slate-400 mb-4">Category Distribution</h3>
+                                        <div class="donut-chart-container">
+                                            <canvas id="${chartId}"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="lg:col-span-2">
+                                        ${accordionsHTML}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    `;
+                });
+                dynamicSections.innerHTML = sectionsHTML;
+
+                setupInteractions();
+                initCharts();
+            }
+
+            // --- 3. Interactive Logic ---
+            function setupInteractions() {
+                // Tabs
+                const tabs = document.querySelectorAll('.tab-btn');
+                const contents = document.querySelectorAll('.tab-content');
+                
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        // Reset tabs
+                        tabs.forEach(t => { t.classList.remove('active-tab'); t.setAttribute('aria-selected', 'false'); });
+                        // Activate clicked
+                        tab.classList.add('active-tab'); tab.setAttribute('aria-selected', 'true');
+                        // Hide all contents
+                        contents.forEach(c => c.classList.add('hidden'));
+                        // Show target
+                        const targetId = tab.getAttribute('aria-controls');
+                        document.getElementById(targetId).classList.remove('hidden');
+                    });
+                });
+
+                // Accordions (Event Delegation not needed as elements exist after initUI, but direct attach is fine)
+                document.querySelectorAll('.accordion-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const targetId = header.getAttribute('data-target');
+                        const content = document.getElementById(targetId);
+                        
+                        if (content.classList.contains('show')) {
+                            content.classList.remove('show');
+                            header.classList.remove('open');
+                        } else {
+                            content.classList.add('show');
+                            header.classList.add('open');
+                        }
+                    });
+                });
+
+                // List Items (Modal Trigger)
+                document.querySelectorAll('.concept-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const text = this.innerText.replace('🔍', '').trim();
+                        fetchExplanation(text);
+                    });
+                });
+            }
+
+            // --- 4. Charts ---
+            function initCharts() {
+                Chart.defaults.color = '#94a3b8';
+                Chart.defaults.borderColor = '#334155';
+
+                // Main Bar Chart
+                const ctxMain = document.getElementById('mainBarChart');
+                const sectionLabels = Object.keys(technologyData);
+                const sectionCounts = Object.values(technologyData).map(d => Object.values(d.categories).flat().length);
+                const sectionColors = Object.values(technologyData).map(d => d.color);
+
+                new Chart(ctxMain, {
+                    type: 'bar',
+                    data: {
+                        labels: sectionLabels,
+                        datasets: [{
+                            label: 'Technologies Count',
+                            data: sectionCounts,
+                            backgroundColor: sectionColors,
+                            borderWidth: 0,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, x: { grid: { display: false } } }
+                    }
+                });
+
+                // Section Donut Charts
+                Object.entries(technologyData).forEach(([key, data]) => {
+                    const chartId = `chart-${key.replace(/\s/g, '')}`;
+                    const ctx = document.getElementById(chartId);
+                    const labels = Object.keys(data.categories);
+                    const counts = Object.values(data.categories).map(arr => arr.length);
+                    
+                    // Generate shades of the main section color
+                    const baseColor = data.color; 
+                    const bgColors = labels.map((_, i) => {
+                        const opacity = 1 - (i * 0.15);
+                        return hexToRgbA(baseColor, Math.max(opacity, 0.4));
+                    });
+
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: counts,
+                                backgroundColor: bgColors,
+                                borderColor: '#0f172a',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { display: false },
+                                tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw}` } }
+                            },
+                            cutout: '70%'
+                        }
+                    });
+                });
+            }
+
+            // Helper for color manipulation
+            function hexToRgbA(hex, alpha){
+                let c;
+                if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+                    c= hex.substring(1).split('');
+                    if(c.length== 3){ c= [c[0], c[0], c[1], c[1], c[2], c[2]]; }
+                    c= '0x'+c.join('');
+                    return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')';
+                }
+                return hex;
+            }
+
+            // --- 5. Search Logic ---
+            const searchInput = document.getElementById('search-input');
+            const resultsContainer = document.getElementById('search-results-container');
+            const resultsList = document.getElementById('search-results-list');
+            const noResults = document.getElementById('search-no-results');
+            const clearBtn = document.getElementById('clear-search');
+            const countSpan = document.getElementById('result-count');
+
+            searchInput.addEventListener('keyup', (e) => {
+                const term = e.target.value.toLowerCase().trim();
+                
+                if (term.length === 0) {
+                    resultsContainer.classList.add('hidden');
+                    clearBtn.classList.add('hidden');
+                    return;
+                }
+                
+                clearBtn.classList.remove('hidden');
+                const matches = allSearchItems.filter(item => item.name.toLowerCase().includes(term));
+                
+                resultsList.innerHTML = '';
+                if (matches.length > 0) {
+                    resultsContainer.classList.remove('hidden');
+                    noResults.classList.add('hidden');
+                    countSpan.textContent = `${matches.length} found`;
+                    
+                    matches.slice(0, 50).forEach(match => { // Limit render for performance
+                        const li = document.createElement('li');
+                        li.className = 'px-4 py-3 hover:bg-slate-800 cursor-pointer transition-colors flex justify-between items-center group';
+                        li.innerHTML = `
+                            <div>
+                                <div class="font-medium text-indigo-300 group-hover:text-indigo-200">${match.name}</div>
+                                <div class="text-xs text-slate-500 mt-0.5">${match.section} > ${match.category}</div>
+                            </div>
+                            <span class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded border border-slate-700 group-hover:border-indigo-500/50">AI Info</span>
+                        `;
+                        li.addEventListener('click', () => fetchExplanation(match.name));
+                        resultsList.appendChild(li);
+                    });
+                } else {
+                    resultsContainer.classList.remove('hidden');
+                    resultsList.innerHTML = '';
+                    noResults.classList.remove('hidden');
+                    countSpan.textContent = '0 found';
+                }
+            });
+
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                resultsContainer.classList.add('hidden');
+                clearBtn.classList.add('hidden');
+            });
+
+            // --- 6. AI Logic ---
+            const modal = document.getElementById('ai-modal');
+            const modalContent = document.getElementById('modal-content');
+            const modalLoading = document.getElementById('modal-loading');
+            const modalError = document.getElementById('modal-error');
+            const tooltip = document.getElementById('definition-tooltip');
+
+            function closeModal() { modal.classList.add('hidden'); document.body.style.overflow = ''; }
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+            document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+
+            async function fetchExplanation(conceptName) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.getElementById('modal-title').textContent = conceptName;
+                modalContent.innerHTML = '';
+                modalLoading.classList.remove('hidden');
+                modalError.classList.add('hidden');
+                document.body.style.overflow = 'hidden';
+
+                if (!apiKey) {
+                    modalLoading.classList.add('hidden');
+                    modalContent.innerHTML = `<p class="text-red-400 text-center">API Key missing. Please add key to source code.</p>`;
+                    return;
+                }
+
+                // Using the gemini-2.5-flash-preview-09-2025 model
+                const model = "gemini-2.5-flash-preview-09-2025";
+                const prompt = `Explain the post-harvest technology "${conceptName}" clearly. Use HTML tags (<h4>, <p>, <ul>, <li>). Wrap technical terms in <strong> tags. No markdown.`;
+
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    const data = await response.json();
+                    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text.replace(/```html/g, '').replace(/```/g, '') || "No info available.";
+                    modalLoading.classList.add('hidden');
+                    modalContent.innerHTML = aiText;
+                } catch (e) {
+                    modalLoading.classList.add('hidden');
+                    modalError.classList.remove('hidden');
+                }
+            }
+
+            // Definition Tooltip Logic
+            async function fetchDefinition(term) {
+                if (!apiKey) return "API Key missing.";
+                const model = "gemini-2.5-flash-preview-09-2025";
+                const prompt = `Define "${term}" (post-harvest context) in <40 words. Plain text.`;
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "No definition found.";
+                } catch (e) { return "Error fetching definition."; }
+            }
+
+            modalContent.addEventListener('mouseup', async () => {
+                const selection = window.getSelection();
+                const selectedText = selection.toString().trim();
+                if (selectedText.length > 1 && selectedText.length < 50) {
+                    const range = selection.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+                    
+                    // Position tooltip relative to viewport
+                    tooltip.style.left = `${rect.left + (rect.width / 2) - 150}px`; // Centered approx
+                    tooltip.style.top = `${rect.top - 10}px`; // Above selection
+                    tooltip.style.transform = 'translateY(-100%)';
+                    
+                    tooltip.innerHTML = `<div class="flex items-center"><div class="spinner-small"></div> Defining...</div>`;
+                    tooltip.classList.remove('hidden');
+
+                    const def = await fetchDefinition(selectedText);
+                    tooltip.innerHTML = `<strong class="text-teal-400 block mb-1 text-xs uppercase tracking-wide">${selectedText}</strong>${def}`;
+                } else {
+                    tooltip.classList.add('hidden');
+                }
+            });
+
+            // Hide tooltip on click anywhere
+            document.addEventListener('mousedown', (e) => {
+                if(!tooltip.contains(e.target)) tooltip.classList.add('hidden');
+            });
+
+            // Initialize App
+            initUI();
+        });
+    </script>
+</body>
+</html>
